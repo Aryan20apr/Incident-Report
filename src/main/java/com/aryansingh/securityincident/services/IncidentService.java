@@ -10,7 +10,7 @@ public interface IncidentService {
 
     String createIncident(IncidentDTO incidentDTO);
 
-    void updateIncident(IncidentDTO incidentDTO);
+    IncidentDTO updateIncident(IncidentDTO incidentDTO);
 
     List<IncidentDTO> getAllIncidents(); // TODO: Add optional filtering severity level and date range.
 

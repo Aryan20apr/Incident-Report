@@ -1,7 +1,6 @@
 package com.aryansingh.securityincident.controllers;
 
 import com.aryansingh.securityincident.models.dtos.IncidentDTO;
-import com.aryansingh.securityincident.models.entities.Incident;
 import com.aryansingh.securityincident.services.IncidentService;
 import com.aryansingh.securityincident.utils.ApiResponse;
 import jakarta.validation.Valid;
@@ -27,4 +26,13 @@ public class IncidentController {
 
         return new ResponseEntity<>(new ApiResponse<>("Incident reported successfully",token), HttpStatus.CREATED);
     }
+
+    @PostMapping("/edit")
+    public ResponseEntity<ApiResponse<IncidentDTO>> updateIncident(@Valid @RequestBody IncidentDTO incident) {
+
+       IncidentDTO incidentDTO = incidentService.updateIncident(incident);
+
+        return new ResponseEntity<>(new ApiResponse<>("Incident updated successfully",incidentDTO), HttpStatus.OK);
+    }
+
 }
