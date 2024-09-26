@@ -12,7 +12,7 @@ public interface IncidentService {
 
     IncidentDTO updateIncident(IncidentDTO incidentDTO);
 
-    List<IncidentDTO> getAllIncidents(); // TODO: Add optional filtering severity level and date range.
+    List<IncidentDTO> getAllIncidents(String severity, String startDate, String endDate);
 
     IncidentDTO findIncidentById(String token);
 

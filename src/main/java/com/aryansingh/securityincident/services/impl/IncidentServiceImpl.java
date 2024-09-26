@@ -5,15 +5,21 @@ import com.aryansingh.securityincident.models.entities.Incident;
 import com.aryansingh.securityincident.models.enums.SeverityLevel;
 import com.aryansingh.securityincident.models.enums.Status;
 import com.aryansingh.securityincident.repositories.IncidentRepository;
+import com.aryansingh.securityincident.repositories.specifications.IncidentSpecifications;
 import com.aryansingh.securityincident.services.IncidentService;
+import com.aryansingh.securityincident.utils.ApiException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.nio.channels.ScatteringByteChannel;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -29,7 +35,7 @@ public class IncidentServiceImpl implements IncidentService {
         validateNewIncidentStatus(incidentDTO);
         Incident incident = Incident.builder()
                 .title(incidentDTO.getTitle())
-                .incidentDate(LocalDateTime.parse(incidentDTO.getIncidentDate()))
+                .incidentDate(convertDateTime(incidentDTO.getIncidentDate()))
                 .status(Status.OPEN)
                 .notes(incidentDTO.getNotes())
                 .severityLevel(SeverityLevel.valueOf(incidentDTO.getSeverityLevel().toUpperCase()))
@@ -51,9 +57,6 @@ public class IncidentServiceImpl implements IncidentService {
             String title = incidentDTO.getTitle();
             String token = incidentDTO.getIncidentToken();
 
-            if(incidentRepository.existsByTitleAndNotIncidentToken(title,token))
-                throw new IllegalArgumentException("Incident with given title already exists");
-
             Optional<Incident> optionalIncident = incidentRepository.findByIncidentToken(token);
 
             if(optionalIncident.isEmpty()){
@@ -62,7 +65,7 @@ public class IncidentServiceImpl implements IncidentService {
 
                 Incident incident = optionalIncident.get();
                 incident.setTitle(title);
-                incident.setIncidentDate(LocalDateTime.parse(incidentDTO.getIncidentDate()));
+                incident.setIncidentDate(convertDateTime(incidentDTO.getIncidentDate()));
 
                 incident.setStatus(Status.valueOf(incidentDTO.getStatus().toUpperCase()));
                 incident.setNotes(incidentDTO.getNotes());
@@ -77,13 +80,58 @@ public class IncidentServiceImpl implements IncidentService {
     }
 
     @Override
-    public List<IncidentDTO> getAllIncidents() {
-        return List.of();
+    public List<IncidentDTO> getAllIncidents(String severity, String startDate, String endDate) {
+        if(severity!=null) {
+            validateSeverity(severity);
+        }
+        LocalDateTime startDateTime = startDate!=null ? convertDateTime(startDate):null;
+        LocalDateTime endDateTime = endDate!=null ? convertDateTime(endDate):null;
+        SeverityLevel sv = severity == null ? null: SeverityLevel.valueOf(severity);
+////              List<Incident> incidents =   incidentRepository.findAll();
+//        List<Incident> incidents = incidentRepository.findAllWithFilters(sv, startDateTime,endDateTime);
+////        List<Incident> incidents = incidentRepository.findAllWithFilters(sv);
+
+        Specification<Incident> spec = Specification
+                .where(IncidentSpecifications.hasSeverityLevel(sv))
+                .and(IncidentSpecifications.hasIncidentDateBetween(startDateTime, endDateTime));
+
+        List<Incident> incidents =  incidentRepository.findAll(spec);
+
+       return incidents.stream().map(IncidentServiceImpl::convertToDTO).toList();
+    }
+
+    private static LocalDateTime convertDateTime(String startDate) {
+
+        try {
+           return LocalDateTime.parse(startDate);
+        } catch (DateTimeParseException e) {
+            throw new ApiException("Invalid date format");
+        }
     }
 
     @Override
     public IncidentDTO findIncidentById(String token) {
-        return null;
+
+        Optional<Incident> optionalIncident = incidentRepository.findByIncidentToken(token);
+        if(optionalIncident.isEmpty()){
+            throw new ApiException("Incident with given token does not exist");
+        } else{
+
+            Incident incident = optionalIncident.get();
+            return convertToDTO(incident);
+        }
+    }
+
+    private static IncidentDTO convertToDTO(Incident incident) {
+        IncidentDTO incidentDTO = new IncidentDTO();
+        incidentDTO.setTitle(incident.getTitle());
+        incidentDTO.setIncidentDate(incident.getIncidentDate().toString());
+        incidentDTO.setUpdatedAt(incident.getUpdatedAt().toString());
+        incidentDTO.setStatus(incident.getStatus().name());
+        incidentDTO.setNotes(incident.getNotes());
+        incidentDTO.setSeverityLevel(incident.getSeverityLevel().name());
+        incidentDTO.setIncidentToken(incident.getIncidentToken());
+        return incidentDTO;
     }
 
     private void validateIncident(IncidentDTO incident) {
@@ -93,14 +141,15 @@ public class IncidentServiceImpl implements IncidentService {
         if (incidentRepository.existsByTitle(incident.getTitle())) {
             throw new IllegalArgumentException("An incident with this title already exists");
         }
-        validateSeverity(incident);
+        validateSeverity(incident.getSeverityLevel());
         validateDate(incident);
     }
 
-    private static void validateSeverity(IncidentDTO incident) {
+    private static void validateSeverity(String severity) {
         // Check for invalid Severity Level
+
         boolean isMatched =  Arrays.stream(SeverityLevel.values())
-                 .anyMatch(enumValue -> enumValue.name().equalsIgnoreCase(incident.getSeverityLevel()));
+                 .anyMatch(enumValue -> enumValue.name().equalsIgnoreCase(severity.trim()));
         if (!isMatched) {
             throw new IllegalArgumentException("Invalid severity level. Must be LOW, MEDIUM, or HIGH.");
         }
@@ -109,7 +158,7 @@ public class IncidentServiceImpl implements IncidentService {
     private static void validateDate(IncidentDTO incident) {
         // Check for invalid date
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
-        LocalDateTime incidentDate =  LocalDateTime.parse(incident.getIncidentDate());
+        LocalDateTime incidentDate = convertDateTime(incident.getIncidentDate());
         if (incidentDate.isBefore(thirtyDaysAgo) || incidentDate.isAfter(LocalDateTime.now())) {
             throw new IllegalArgumentException("Incident date must be within the last 30 days and not in the future");
         }
@@ -117,10 +166,11 @@ public class IncidentServiceImpl implements IncidentService {
 
     private void validateExistingIncident(IncidentDTO incidentDTO){
 
+        if(incidentRepository.existsByTitleAndNotIncidentToken(incidentDTO.getTitle(),incidentDTO.getIncidentToken()))
+            throw new IllegalArgumentException("Incident with given title already exists");
+
         validateDate(incidentDTO);
-        validateSeverity(incidentDTO);
-
-
+        validateSeverity(incidentDTO.getSeverityLevel());
 
     }
 
