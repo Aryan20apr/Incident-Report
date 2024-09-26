@@ -9,7 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -37,15 +37,13 @@ public class Incident {
     @Enumerated(EnumType.STRING)
     private SeverityLevel severityLevel;
 
-    @CreatedDate
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Date incidentDate;
+
+    private LocalDateTime incidentDate;
 
     @LastModifiedDate
     @UpdateTimestamp
     @Column(name = "updated_at")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 
 
     @Enumerated(EnumType.STRING)
