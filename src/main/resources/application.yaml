@@ -1,0 +1,12 @@
+# This file should not be included in vcs, and public repos. Here included in vcs for reference purposes.
+
+server:
+  port: 8085
+
+
+spring:
+  application:
+    name: SecurityIncident
+
+
+
