@@ -9,3 +9,22 @@ spring:
   profiles:
     active: dev
 
+logging:
+  level:
+    root: INFO  # Keep root logger for console logging
+    API_REQUEST_LOGGER: INFO  # Custom logger for API requests
+  appenders:
+    console:
+      name: STDOUT
+      target: SYSTEM_OUT
+      pattern: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"  # Console pattern
+    file:
+      name: FILE_LOG
+      fileName: logs/api-requests.log
+      pattern: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"  # File log pattern, only message (no thread info)
+  loggers:
+    API_REQUEST_LOGGER:
+      appenders: [FILE_LOG]  # Log API requests only to file
+    root:
+      appenders: [STDOUT]  # Default root logger to console
+
