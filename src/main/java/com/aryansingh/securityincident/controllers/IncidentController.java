@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class IncidentController {
     IncidentService incidentService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<String>> newIncident(@Valid @RequestBody IncidentDTO incident) {
 
         String token = incidentService.createIncident(incident);
@@ -26,6 +28,7 @@ public class IncidentController {
     }
 
     @PutMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<IncidentDTO>> updateIncident(@Valid @RequestBody IncidentDTO incident) {
 
        IncidentDTO incidentDTO = incidentService.updateIncident(incident);
@@ -34,6 +37,7 @@ public class IncidentController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     public ResponseEntity<ApiResponse<IncidentDTO>> getIncident(@RequestParam String id) {
 
         IncidentDTO incidentDTO = incidentService.findIncidentById(id);
@@ -42,6 +46,7 @@ public class IncidentController {
     }
 
     @GetMapping("/filter")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     public ResponseEntity<ApiResponse<List<IncidentDTO>>> getIncidents(
             @RequestParam(required = false,name = "sv") String severity,
             @RequestParam(required = false,name = "sd") String startDate,

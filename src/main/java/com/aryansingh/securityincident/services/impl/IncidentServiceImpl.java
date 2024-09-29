@@ -102,6 +102,8 @@ public class IncidentServiceImpl implements IncidentService {
 
     private static LocalDateTime convertDateTime(String startDate) {
 
+        if(startDate == null)
+                throw new ApiException("Date cannot be empty");
         try {
            return LocalDateTime.parse(startDate);
         } catch (DateTimeParseException e) {
@@ -126,7 +128,9 @@ public class IncidentServiceImpl implements IncidentService {
         IncidentDTO incidentDTO = new IncidentDTO();
         incidentDTO.setTitle(incident.getTitle());
         incidentDTO.setIncidentDate(incident.getIncidentDate().toString());
-        incidentDTO.setUpdatedAt(incident.getUpdatedAt().toString());
+        incidentDTO.setUpdatedAt(Optional.ofNullable(incident.getUpdatedAt())
+                .map(LocalDateTime::toString)
+                .orElse("N/A"));
         incidentDTO.setStatus(incident.getStatus().name());
         incidentDTO.setNotes(incident.getNotes());
         incidentDTO.setSeverityLevel(incident.getSeverityLevel().name());

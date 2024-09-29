@@ -3,19 +3,18 @@ spring:
     import: optional:application-secrets.yaml
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/incidentdb   #jdbc:h2:mem:incidentdb
-#    driver-class-name: org.h2.Driver
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:h2:mem:incidentdb
+    driver-class-name: org.h2.Driver
   jpa:
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.H2Dialect
         show_sql: true
         format_sql: true
     generate-ddl: true
     hibernate:
       ddl-auto: update
-#    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.H2Dialect
 
   h2:
     console:

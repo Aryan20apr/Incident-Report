@@ -24,14 +24,5 @@ public interface IncidentRepository extends JpaRepository<Incident,Long>, JpaSpe
     boolean existsByTitleAndNotIncidentToken(@Param("title") String title, @Param("token") String incidentToken);
 
 
-    @Query("SELECT i FROM Incident i " +
-            "WHERE (:severityLevel IS NULL OR i.severityLevel = :severityLevel)"
-    +
-            "AND (:startDate IS NULL OR i.incidentDate >= :startDate) "
-    +"AND (:endDate IS NULL OR i.incidentDate <= :endDate)")
-    List<Incident> findAllWithFilters(@Param("severityLevel") SeverityLevel severityLevel,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
 }
 

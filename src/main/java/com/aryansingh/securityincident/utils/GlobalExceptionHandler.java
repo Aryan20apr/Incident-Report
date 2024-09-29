@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import javax.naming.AuthenticationException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,4 +43,19 @@ public class GlobalExceptionHandler {
         ApiResponse<String> apiResponse=new ApiResponse<>(AppConstants.ERROR_MESSAGE,e.getMessage());
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(InsufficientRolesException.class)
+    public ResponseEntity<ApiResponse<String>> handleInsufficientRolesException(InsufficientRolesException e){
+        ApiResponse<String> apiResponse=new ApiResponse<>(AppConstants.ACCESS_DENIED_MESSAGE,e.getMessage());
+        return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
+    }
+
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse<String>> handleAuthenticationException(AuthenticationException e){
+        ApiResponse<String> apiResponse=new ApiResponse<>("User not authenticated",e.getMessage());
+        return new ResponseEntity<>(apiResponse, HttpStatus.UNAUTHORIZED);
+    }
 }
+
+

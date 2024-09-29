@@ -1,12 +1,11 @@
 package com.aryansingh.securityincident.models.dtos;
 
-import com.aryansingh.securityincident.models.enums.Status;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.sql.Date;
+
 
 
 @AllArgsConstructor
